@@ -1,23 +1,37 @@
 import pandas as pd
 import os
+import gdown
 from pathlib import Path
 
 def get_dataframe_from_csv():
-    """クロスモール CSV フォルダから複数 CSV を読み込んで結合"""
+    """Google Drive または ローカルの CSV フォルダからデータを読み込んで結合"""
 
-    # CSV フォルダのパス
-    csv_folder = Path('クロスモールCSV')
+    # Google Drive フォルダ ID
+    GOOGLE_DRIVE_FOLDER_ID = "1XQAzPbCo2IpwCX_exXtp4Yr8bL6fz0ek"
+    LOCAL_FOLDER = Path('クロスモールCSV')
 
-    if not csv_folder.exists():
-        raise FileNotFoundError(f"❌ フォルダが見つかりません: {csv_folder}")
+    # ローカルフォルダが存在するか確認
+    if LOCAL_FOLDER.exists():
+        print(f"📁 ローカルフォルダから読み込み中...")
+        csv_files = list(LOCAL_FOLDER.glob('*.csv'))
+    else:
+        print(f"📁 Google Drive からデータをダウンロード中...")
+        LOCAL_FOLDER.mkdir(exist_ok=True)
 
-    # CSV ファイル一覧を取得
-    csv_files = list(csv_folder.glob('*.csv'))
+        try:
+            gdown.download_folder(
+                f"https://drive.google.com/drive/folders/{GOOGLE_DRIVE_FOLDER_ID}",
+                output=str(LOCAL_FOLDER),
+                quiet=True,
+                use_cookies=False
+            )
+            csv_files = list(LOCAL_FOLDER.glob('*.csv'))
+        except Exception as e:
+            raise FileNotFoundError(f"❌ Google Drive からのダウンロードに失敗しました: {e}")
 
     if not csv_files:
-        raise FileNotFoundError(f"❌ CSV ファイルが見つかりません: {csv_folder}")
+        raise FileNotFoundError(f"❌ CSV ファイルが見つかりません: {LOCAL_FOLDER}")
 
-    print(f"📁 クロスモール CSV フォルダからデータを読み込み中...")
     print(f"  - 見つかったファイル数: {len(csv_files)}")
 
     # すべての CSV を読み込んで結合
