@@ -29,6 +29,35 @@ st.set_page_config(
 
 
 # ===========================
+# パスワード認証
+# ===========================
+def check_password():
+    """パスワード認証チェック"""
+    if "password_correct" not in st.session_state:
+        st.session_state.password_correct = False
+
+    if st.session_state.password_correct:
+        return True
+
+    # パスワード入力フォーム
+    st.markdown("### 🔐 パスワード認証")
+    password = st.text_input("パスワードを入力してください", type="password")
+
+    if password:
+        if password == "sunnyrex":
+            st.session_state.password_correct = True
+            st.rerun()
+        else:
+            st.error("❌ パスワードが違います")
+
+    return False
+
+
+if not check_password():
+    st.stop()
+
+
+# ===========================
 # データ読込
 # ===========================
 @st.cache_data
