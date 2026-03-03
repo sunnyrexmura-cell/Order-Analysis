@@ -1,44 +1,45 @@
 import pandas as pd
 import os
-import gdown
 from pathlib import Path
+import gdown
 
 def get_dataframe_from_csv():
-    """Google Drive または ローカルの CSV フォルダからデータを読み込んで結合"""
+    """Google Drive から CSV をダウンロードして読み込んで結合"""
 
-    # Google Drive フォルダ ID
-    GOOGLE_DRIVE_FOLDER_ID = "1XQAzPbCo2IpwCX_exXtp4Yr8bL6fz0ek"
-    LOCAL_FOLDER = Path('クロスモールCSV')
+    # Google Drive フォルダID
+    folder_id = "1XQAzPbCo2IpwCX_exXtp4Yr8bL6fz0ek"
+    csv_folder = Path('クロスモールCSV')
 
-    # ローカルフォルダが存在するか確認
-    if LOCAL_FOLDER.exists():
-        print(f"📁 ローカルフォルダから読み込み中...")
-        csv_files = list(LOCAL_FOLDER.glob('*.csv'))
-    else:
-        print(f"📁 Google Drive からデータをダウンロード中...")
-        LOCAL_FOLDER.mkdir(exist_ok=True)
-
+    # フォルダが存在しなければダウンロード
+    if not csv_folder.exists():
+        print(f"[*] Google Drive からデータをダウンロード中...")
         try:
             gdown.download_folder(
-                f"https://drive.google.com/drive/folders/{GOOGLE_DRIVE_FOLDER_ID}",
-                output=str(LOCAL_FOLDER),
-                quiet=True,
+                id=folder_id,
+                output=str(csv_folder),
+                quiet=False,
                 use_cookies=False
             )
-            csv_files = list(LOCAL_FOLDER.glob('*.csv'))
         except Exception as e:
-            raise FileNotFoundError(f"❌ Google Drive からのダウンロードに失敗しました: {e}")
+            print(f"[!] ダウンロードエラー: {e}")
+            raise FileNotFoundError(f"[ERROR] Google Drive からダウンロードできません: {e}")
+    else:
+        print(f"[*] ローカルキャッシュから CSV を読み込み中...")
+
+    # CSV ファイル一覧を取得
+    csv_files = list(csv_folder.glob('*.csv'))
 
     if not csv_files:
-        raise FileNotFoundError(f"❌ CSV ファイルが見つかりません: {LOCAL_FOLDER}")
+        raise FileNotFoundError(f"[ERROR] CSV ファイルが見つかりません: {csv_folder}")
 
+    print(f"[*] クロスモール CSV ファイルを読み込み中...")
     print(f"  - 見つかったファイル数: {len(csv_files)}")
 
     # すべての CSV を読み込んで結合
     dfs = []
     for csv_file in sorted(csv_files):
         try:
-            print(f"  ✓ {csv_file.name} を読み込み中...", end='')
+            print(f"  [+] {csv_file.name} を読み込み中...", end='')
 
             # 複数のエンコーディングを試す
             encodings = ['utf-8', 'shift_jis', 'cp932', 'utf-8-sig']
@@ -51,16 +52,16 @@ def get_dataframe_from_csv():
                     continue
 
             if df is None:
-                print(f" ❌ エラー: エンコーディングが対応していません")
+                print(f" [ERROR] エンコーディングが対応していません")
                 continue
 
             print(f" ({len(df):,} 行)")
             dfs.append(df)
         except Exception as e:
-            print(f" ❌ エラー: {e}")
+            print(f" [ERROR] {e}")
 
     if not dfs:
-        raise ValueError("❌ 読み込み可能な CSV がありません")
+        raise ValueError("[ERROR] 読み込み可能な CSV がありません")
 
     # すべてのデータフレームを結合
     result_df = pd.concat(dfs, ignore_index=True)
