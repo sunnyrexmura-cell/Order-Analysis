@@ -46,7 +46,12 @@ def get_dataframe_from_csv():
             df = None
             for encoding in encodings:
                 try:
-                    df = pd.read_csv(csv_file, encoding=encoding)
+                    df = pd.read_csv(
+                        csv_file,
+                        encoding=encoding,
+                        low_memory=False,  # 型推定を高速化
+                        dtype={'標準商品名': 'category'}  # カテゴリ型で省メモリ化
+                    )
                     break
                 except Exception:
                     continue

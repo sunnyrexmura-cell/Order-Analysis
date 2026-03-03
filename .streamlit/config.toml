@@ -1,5 +1,6 @@
 [client]
-showErrorDetails = true
+showErrorDetails = false
+toolbarMode = "minimal"
 
 [theme]
 primaryColor = "#667eea"
@@ -12,3 +13,11 @@ font = "sans serif"
 headless = true
 port = 8501
 runOnSave = false
+maxUploadSize = 200
+
+[logger]
+level = "error"
+
+[cache]
+maxEntries = 1000
+ttlSeconds = 3600

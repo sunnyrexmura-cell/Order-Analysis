@@ -9,27 +9,27 @@ import streamlit as st
 
 def apply_date_filter(df_data, filter_opts):
     """発送日フィルタの適用"""
-    df_filtered = df_data.copy()
+    if 'min_date' not in filter_opts:
+        return df_data
 
-    if 'min_date' in filter_opts:
-        date_range = st.sidebar.date_input(
-            "📅 発送日（期間）",
-            value=(filter_opts['min_date'], filter_opts['max_date']),
-            min_value=filter_opts['min_date'],
-            max_value=filter_opts['max_date']
-        )
-        if len(date_range) == 2:
-            df_filtered = df_filtered[
-                (pd.to_datetime(df_filtered['発送日'], errors='coerce').dt.date >= date_range[0]) &
-                (pd.to_datetime(df_filtered['発送日'], errors='coerce').dt.date <= date_range[1])
-            ]
+    date_range = st.sidebar.date_input(
+        "📅 発送日（期間）",
+        value=(filter_opts['min_date'], filter_opts['max_date']),
+        min_value=filter_opts['min_date'],
+        max_value=filter_opts['max_date']
+    )
 
-    return df_filtered
+    if len(date_range) == 2:
+        # 既に日付型なら直接比較（高速）
+        mask = (df_data['日付'] >= date_range[0]) & (df_data['日付'] <= date_range[1])
+        return df_data[mask]
+
+    return df_data
 
 
 def apply_checkbox_filter(df_data, filter_key, display_name, icon, column_name, filter_opts):
     """チェックボックス形式フィルタの適用（店舗名、配送便、仕入先名）"""
-    df_filtered = df_data.copy()
+    df_filtered = df_data
 
     if filter_key in filter_opts:
         options = filter_opts[filter_key]
@@ -69,8 +69,8 @@ def apply_checkbox_filter(df_data, filter_key, display_name, icon, column_name, 
 
 
 def apply_all_filters(df_data, filter_opts):
-    """すべてのフィルタを適用"""
-    df_filtered = df_data.copy()
+    """すべてのフィルタを適用（高速版）"""
+    df_filtered = df_data
 
     # 発送日フィルタ
     df_filtered = apply_date_filter(df_filtered, filter_opts)
